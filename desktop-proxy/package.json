@@ -4,12 +4,16 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "start": "node index.js"
+    "start": "node index.js",
+    "all": "concurrently \"kubectl port-forward svc/incloud-web-incloud-web-chart 9081:8081 -n incloud-web\" \"npm start\""
   },
   "dependencies": {
-    "dotenv": "16.4.5",
+    "dotenv": "^16.4.5",
     "express": "^4.19.2",
     "http-proxy-middleware": "^3.0.0",
     "morgan": "^1.10.0"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1"
   }
 }
