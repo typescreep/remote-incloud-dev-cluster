@@ -116,6 +116,13 @@ KUBECONFIG=~/vps-minikube.yaml kubectl get --raw=/version
 ```
 
 You will get x509 error, but with `server-name`s to proved
+Sooner I found:
+
+```
+kubectl config view --minify
+```
+
+to do this ^
 
 ```bash
 kubectl --kubeconfig ~/vps-minikube.yaml config set-cluster vps-minikube --tls-server-name=192.168.58.2 # ip from x509 error
