@@ -58,6 +58,13 @@ rm -f helmfile.tar.gz
 helmfile version
 ```
 
+## Installing minikube
+
+```bash
+curl -LO https://github.com/kubernetes/minikube/releases/latest/download/minikube-linux-amd64
+sudo install minikube-linux-amd64 /usr/local/bin/minikube && rm minikube-linux-amd64
+```
+
 ## Setting public IP as env
 
 ```bash
@@ -115,7 +122,8 @@ KUBECONFIG=~/vps-minikube.yaml kubectl get pods -A
 KUBECONFIG=~/vps-minikube.yaml kubectl get --raw=/version
 ```
 
-You will get x509 error, but with `server-name`s to proved
+You will get x509 error, but with `server-name`s to find
+
 Sooner I found:
 
 ```
