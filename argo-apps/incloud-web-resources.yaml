@@ -1,0 +1,22 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  annotations: {}
+  name: incloud-web-resources
+  namespace: argocd
+spec:
+  destination:
+    namespace: incloud-web
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    helm:
+      values: |-
+        incloud-web-resources:
+          enabled: false
+    path: .
+    repoURL: https://github.com/PRO-Robotech/incloud-web-resources.git
+    targetRevision: dev
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true

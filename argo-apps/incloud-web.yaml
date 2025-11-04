@@ -1,0 +1,38 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  annotations: {}
+  name: incloud-web
+  namespace: argocd
+spec:
+  destination:
+    namespace: incloud-web
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    helm:
+      values: |-
+        incloud-web-resources:
+          enabled: false
+        service:
+          ports:
+            - name: web-http
+              port: 8080
+              targetPort: 8080
+              protocol: TCP
+            - name: nginx-http
+              port: 8081
+              targetPort: 8081
+              protocol: TCP
+            - name: bff-http
+              port: 8082
+              targetPort: 8082
+              protocol: TCP
+        externalDomain: 127.0.0.1
+        externalDomainPort: 80
+    path: .
+    repoURL: https://github.com/PRO-Robotech/incloud-web-chart.git
+    targetRevision: dev
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true
