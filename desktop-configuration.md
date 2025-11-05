@@ -17,11 +17,20 @@ Maybe you'll want to create `acitvateVps.sh` by adding:
 
 # Patch kubeconfig
 
+> **Note:** Currently noticing different behavior on differens OSes
+
 Patch `~/.kube/config` with `insecure-skip-tls-verify: true`
 
 ```
   insecure-skip-tls-verify: true
   server: ...
+```
+
+or
+
+```
+  # insecure-skip-tls-verify: true
+  server: https:// ...
 ```
 
 # Apply context
