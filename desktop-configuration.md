@@ -15,6 +15,15 @@ Maybe you'll want to create `acitvateVps.sh` by adding:
 #!/usr/bin/env bash
 ```
 
+# Patch kubeconfig
+
+Patch `~/.kube/config` with `insecure-skip-tls-verify: true`
+
+```
+  insecure-skip-tls-verify: true
+  server: ...
+```
+
 # Apply context
 
 ```bash
