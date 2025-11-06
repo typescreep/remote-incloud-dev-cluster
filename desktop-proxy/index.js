@@ -69,18 +69,18 @@ function fetchToken() {
 }
 
 async function getFreshToken() {
-  const now = Math.floor(Date.now() / 1000);
-  if (!cachedToken || cachedExp - now < 60) return await fetchToken();
+  const nowSec = Math.floor(Date.now() / 1000);
+  if (!cachedToken || cachedExp - nowSec < 60) return await fetchToken();
   return cachedToken;
 }
 
-function needsAuth(path) {
-  return AUTH_PREFIXES.some((p) => path.startsWith(p));
+function needsAuth(pathname) {
+  return AUTH_PREFIXES.some((p) => pathname.startsWith(p));
 }
 
 const app = express();
 
-// PRE-PROXY MIDDLEWARE — set Authorization on req BEFORE proxy builds upstream request
+// --- HTTP requests: inject Authorization before proxy
 app.use(async (req, res, next) => {
   const hasClientAuth = !!req.headers["authorization"];
   const willInject = FORCE_AUTH || (!hasClientAuth && needsAuth(req.url));
@@ -107,12 +107,12 @@ const agent = INSECURE
 
 const proxyMw = createProxyMiddleware({
   target: UPSTREAM,
-  changeOrigin: false,
+  changeOrigin: false, // set true if upstream expects its own Host
   ws: true,
   secure: !INSECURE,
   agent,
+
   onProxyReq(proxyReq, req, res) {
-    // PROVE what we’re sending upstream
     const auth = proxyReq.getHeader("authorization");
     log(
       `UP  ${req.method} ${req.url} -> ${UPSTREAM} authHeader=${
@@ -120,9 +120,20 @@ const proxyMw = createProxyMiddleware({
       }`
     );
   },
+
+  onProxyReqWs(proxyReq, req, socket, options, head) {
+    const auth = proxyReq.getHeader("authorization");
+    log(
+      `UPW ${req.method || "GET"} ${req.url} -> ${UPSTREAM} authHeader=${
+        auth ? String(auth).slice(0, 24) + "…" : "NONE"
+      }`
+    );
+  },
+
   onProxyRes(proxyRes, req, res) {
     log(`OUT ${proxyRes.statusCode} ${req.method} ${req.url} via ${UPSTREAM}`);
   },
+
   onError(err, req, res) {
     log(`ERR ${req.method} ${req.url}: ${err.message}`);
     res.writeHead(502, { "content-type": "text/plain" });
@@ -133,7 +144,40 @@ const proxyMw = createProxyMiddleware({
 app.use("/", proxyMw);
 
 const server = http.createServer(app);
-server.on("upgrade", proxyMw.upgrade);
+
+// --- WebSocket upgrades: inject Authorization before proxy.upgrade
+server.on("upgrade", async (req, socket, head) => {
+  try {
+    const hasClientAuth =
+      !!req.headers["authorization"] || !!req.headers["sec-websocket-protocol"];
+    const willInject =
+      FORCE_AUTH || (!hasClientAuth && needsAuth(req.url || "/"));
+    log(
+      `UPG ${req.method || "GET"} ${
+        req.url
+      } clientAuth=${hasClientAuth} willInject=${willInject}`
+    );
+
+    if (willInject) {
+      const token = await getFreshToken();
+      req.headers["authorization"] = `Bearer ${token}`;
+      log(`SET(WS) auth header -> Bearer ${token.slice(0, 16)}…`);
+    }
+
+    proxyMw.upgrade(req, socket, head);
+  } catch (e) {
+    log(`FAIL(WS) token: ${e.message}`);
+    try {
+      socket.write(
+        "HTTP/1.1 502 Bad Gateway\r\n" +
+          "Connection: close\r\n" +
+          "Content-Type: text/plain\r\n\r\n" +
+          `WebSocket upgrade failed: ${e.message}`
+      );
+    } catch {}
+    socket.destroy();
+  }
+});
 
 server.listen(PORT, () => {
   log(`listening http://127.0.0.1:${PORT}`);
