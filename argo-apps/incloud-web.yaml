@@ -11,6 +11,9 @@ spec:
   project: default
   source:
     helm:
+      parameters:
+      - name: bff.env.BASE_ALLOWED_AUTH_HEADERS
+        value: authorization,user-agent,accept,content-type,origin,referer,accept-encoding,cookie
       values: |-
         incloud-web-resources:
           enabled: false
