@@ -16,7 +16,7 @@ spec:
           enabled: false
     path: .
     repoURL: https://github.com/PRO-Robotech/incloud-web-resources.git
-    targetRevision: dev
+    targetRevision: main
   syncPolicy:
     syncOptions:
       - CreateNamespace=true

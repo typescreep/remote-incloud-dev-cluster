@@ -35,7 +35,7 @@ spec:
         externalDomainPort: 80
     path: .
     repoURL: https://github.com/PRO-Robotech/incloud-web-chart.git
-    targetRevision: dev
+    targetRevision: main
   syncPolicy:
     syncOptions:
       - CreateNamespace=true
