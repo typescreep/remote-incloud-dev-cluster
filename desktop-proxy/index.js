@@ -20,6 +20,8 @@ const AUTH_PREFIXES = (
   .filter(Boolean);
 const INSECURE = process.env.INSECURE_SKIP_VERIFY === "1";
 
+const isHttpsUpstream = UPSTREAM.startsWith("https://");
+
 function now() {
   return new Date().toISOString();
 }
@@ -70,12 +72,15 @@ function fetchToken() {
 
 async function getFreshToken() {
   const nowSec = Math.floor(Date.now() / 1000);
-  if (!cachedToken || cachedExp - nowSec < 60) return await fetchToken();
+  if (!cachedToken || cachedExp - nowSec < 60) {
+    return await fetchToken();
+  }
   return cachedToken;
 }
 
 function needsAuth(pathname) {
-  return AUTH_PREFIXES.some((p) => pathname.startsWith(p));
+  const p = pathname || "/";
+  return AUTH_PREFIXES.some((prefix) => p.startsWith(prefix));
 }
 
 const app = express();
@@ -101,15 +106,18 @@ app.use(async (req, res, next) => {
   }
 });
 
-const agent = INSECURE
-  ? new https.Agent({ rejectUnauthorized: false })
-  : undefined;
+// Only create an https.Agent if upstream is actually HTTPS
+const agent =
+  isHttpsUpstream && INSECURE
+    ? new https.Agent({ rejectUnauthorized: false })
+    : undefined;
 
 const proxyMw = createProxyMiddleware({
   target: UPSTREAM,
   changeOrigin: false, // set true if upstream expects its own Host
   ws: true,
-  secure: !INSECURE,
+  // secure only matters for https targets
+  secure: isHttpsUpstream && !INSECURE,
   agent,
 
   onProxyReq(proxyReq, req, res) {
@@ -136,7 +144,9 @@ const proxyMw = createProxyMiddleware({
 
   onError(err, req, res) {
     log(`ERR ${req.method} ${req.url}: ${err.message}`);
-    res.writeHead(502, { "content-type": "text/plain" });
+    if (!res.headersSent) {
+      res.writeHead(502, { "content-type": "text/plain" });
+    }
     res.end(`Proxy error: ${err.message}`);
   },
 });
@@ -148,14 +158,12 @@ const server = http.createServer(app);
 // --- WebSocket upgrades: inject Authorization before proxy.upgrade
 server.on("upgrade", async (req, socket, head) => {
   try {
-    const hasClientAuth =
-      !!req.headers["authorization"] || !!req.headers["sec-websocket-protocol"];
-    const willInject =
-      FORCE_AUTH || (!hasClientAuth && needsAuth(req.url || "/"));
+    const url = req.url || "/";
+    const willInject = FORCE_AUTH || needsAuth(url);
     log(
-      `UPG ${req.method || "GET"} ${
-        req.url
-      } clientAuth=${hasClientAuth} willInject=${willInject}`
+      `UPG ${req.method || "GET"} ${url} willInject=${willInject} authHeader=${
+        req.headers["authorization"] ? "YES" : "NO"
+      }`
     );
 
     if (willInject) {
@@ -174,7 +182,9 @@ server.on("upgrade", async (req, socket, head) => {
           "Content-Type: text/plain\r\n\r\n" +
           `WebSocket upgrade failed: ${e.message}`
       );
-    } catch {}
+    } catch {
+      // ignore
+    }
     socket.destroy();
   }
 });
