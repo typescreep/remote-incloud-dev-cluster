@@ -36,3 +36,9 @@ To kill forward afterwards:
 ```
 pkill -f "kubectl port-forward .*9081:8081"
 ```
+
+## Run k8s-role-graph
+
+```
+kubectl port-forward svc/incloud-k8s-role-graph-web 9082:8080 -n incloud-k8s-role-graph
+```

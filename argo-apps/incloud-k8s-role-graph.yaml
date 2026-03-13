@@ -1,0 +1,28 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  annotations: {}
+  name: incloud-k8s-role-graph
+  namespace: argocd
+spec:
+  destination:
+    namespace: incloud-k8s-role-graph
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    repoURL: oci://registry-1.docker.io/prorobotech/k8s-role-graph
+    chart: k8s-role-graph
+    targetRevision: 0.1.0-dc97fbc
+    helm:
+      values: |-
+        server:
+          image:
+            tag: "CLOUD-447-183effdd"
+        web:
+          image:
+            tag: "CLOUD-447-183effdd"
+        expose:
+          enabled: false
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true
