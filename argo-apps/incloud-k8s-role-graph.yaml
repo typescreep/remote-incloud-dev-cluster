@@ -17,10 +17,10 @@ spec:
       values: |-
         server:
           image:
-            tag: "CLOUD-447-9811fbb"
+            tag: "release-0.1.0-4924cfc7"
         web:
           image:
-            tag: "CLOUD-447-9811fbb"
+            tag: "release-0.1.0-4924cfc7"
         expose:
           enabled: false
   syncPolicy:
