@@ -17,10 +17,10 @@ spec:
       values: |-
         server:
           image:
-            tag: "release-0.1.0-4924cfc7"
+            tag: "release-0.1.0-2d3990b1"
         web:
           image:
-            tag: "release-0.1.0-4924cfc7"
+            tag: "release-0.1.0-2d3990b1"
         expose:
           enabled: false
   syncPolicy:
