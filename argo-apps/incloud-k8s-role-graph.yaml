@@ -10,17 +10,17 @@ spec:
     server: https://kubernetes.default.svc
   project: default
   source:
-    repoURL: oci://registry-1.docker.io/prorobotech/k8s-role-graph
+    repoURL: registry-1.docker.io/prorobotech
     chart: k8s-role-graph
-    targetRevision: 0.1.0-dc97fbc
+    targetRevision: 0.1.0-8da6093
     helm:
       values: |-
         server:
           image:
-            tag: "release-0.1.0-5c8b72be"
+            tag: "CLOUD-514-5fb1cc6e"
         web:
           image:
-            tag: "release-0.1.0-5c8b72be"
+            tag: "CLOUD-514-5fb1cc6e"
         expose:
           enabled: false
   syncPolicy:
