@@ -1,0 +1,22 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  annotations: {}
+  name: incloud-k8s-role-graph
+  namespace: argocd
+spec:
+  destination:
+    namespace: incloud-k8s-role-engine
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    repoURL: https://github.com/PRO-Robotech/k8s-rbac-engine-chart.git
+    path: .
+    targetRevision: HEAD
+    helm:
+      values: |
+        nameOverride: k8s-rbac-engine
+        fullnameOverride: k8s-rbac-engine
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true
